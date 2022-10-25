@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="state_transition_template_form_view" model="ir.ui.view">
+        <field name="name">state.transition.template.form.view</field>
+        <field name="model">state.transition.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="id" invisible="1"/>
+                <field name="model_model" invisible="1"/>
+                <sheet>
+                    <label for="name" class="oe_edit_only"/>
+                    <h1>
+                        <field name="name"/>
+                    </h1>
+                    <group>
+                        <field name="reference"/>
+                    </group>
+                    <group>
+                        <field name="model_id"
+                               options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                    </group>
+                    <group>
+                        <field name="key"/>
+                        <field name="mode"/>
+                    </group>
+                    <notebook>
+                        <page name="previous_state" string="Previous State">
+                            <group >
+                                <group>
+                                    <field name="previous_state_id"
+                                           domain="[('id', '!=', id)]"
+                                           options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                                </group>
+                                <group >
+                                    <field name="previous_state_user_domain" widget="advance_domain"
+                                           options="{'model': 'res.users', 'in_dialog': true}"/>
+                                    <field name="previous_state_employee_domain" widget="advance_domain"
+                                           options="{'model': 'hr.employee', 'in_dialog': true}"/>
+                                    <field name="previous_group_domain" widget="advance_domain"
+                                           options="{'model': 'res.groups', 'in_dialog': true}"/>
+                                    <field name="previous_model_domain" widget="advance_domain"
+                                           options="{'model': 'model_model', 'in_dialog': true}"
+                                           attrs="{'invisible': [('model_id','=', False)]}"
+                                    />
+                                </group>
+                            </group>
+                        </page>
+                        <page name="next_state" string="Next State">
+                            <group>
+                                <group>
+                                    <field name="next_state_id"
+                                           domain="[('id', '!=', id)]"
+                                           options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                                </group>
+                                <group>
+                                    <field name="next_state_user_domain" widget="advance_domain"
+                                           options="{'model': 'res.users', 'in_dialog': true}"/>
+                                    <field name="next_state_employee_domain" widget="advance_domain"
+                                           options="{'model': 'hr.employee', 'in_dialog': true}"/>
+                                    <field name="next_group_domain" widget="advance_domain"
+                                           options="{'model': 'res.groups', 'in_dialog': true}"/>
+                                    <field name="next_model_domain" widget="advance_domain"
+                                           options="{'model': 'model_model', 'in_dialog': true}"
+                                           attrs="{'invisible': [('model_id','=', False)]}"
+                                    />
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="state_transition_template_tree_view" model="ir.ui.view">
+        <field name="name">state.transition.template.tree.view</field>
+        <field name="model">state.transition.template</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="sequence" widget="handle"/>
+                <field name="previous_state_id"/>
+                <field name="name"/>
+                <field name="next_state_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="state_transition_template_search_view" model="ir.ui.view">
+        <field name="name">state.transition.template.search.view</field>
+        <field name="model">state.transition.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+</odoo>
