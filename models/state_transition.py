@@ -9,16 +9,6 @@ class StateTransition(models.Model):
     _rec_name = 'name'
 
     tmpl_state_id = fields.Many2one("state.transition.template", string="Template", ondelete="cascade")
-    previous_code = fields.Text(string="Code")
-    next_code = fields.Text(string="Code")
-
-    @api.constrains("tmpl_state_id")
-    def _check_tmpl_state_id(self):
-        for state in self.filtered(lambda stt: stt.tmpl_state_id):
-            if state.tmpl_state_id.tmpl_state_id:
-                raise ValidationError(_("Cannot create 2-level template for state!"))
-            if state.tmpl_state_id and state.model_id:
-                raise ValidationError(_("Cannot specific model for template state transition!"))
 
     def prepare_sync_data(self):
         self.ensure_one()

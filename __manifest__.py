@@ -14,6 +14,7 @@
 
         #     Views
         'views/state_transition_views.xml',
+        'views/state_transition_route_views.xml',
         'views/state_transition_template_views.xml'
         #     Wizard
     ],

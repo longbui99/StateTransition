@@ -20,20 +20,23 @@ class StateTransition(models.Model):
         ("server_action", "Server Action")
     ], string="Mode", required=True)
     stt_transition_id = fields.Many2one("state.transition.route", string="State Transition Route", ondelete="cascade")
+    stt_transition_ids = fields.One2many("state.transition", "tmpl_state_id", string="State Variants")
     model_id = fields.Many2one("ir.model", string="Model", ondelete="cascade")
     model_model = fields.Char(related="model_id.model", store=True)
-    previous_state_id = fields.Many2one("state.transition.template", string="Previous State")
-    next_state_id = fields.Many2one("state.transition.template", string="Next State")
     # Previous State Domain
+    previous_state_id = fields.Many2one("state.transition.template", string="Previous State")
     previous_state_user_domain = fields.Char(string="Applicable Users")
     previous_state_employee_domain = fields.Char(string="Applicable Employees")
     previous_group_domain = fields.Char(string="Applicable Groups")
     previous_model_domain = fields.Char(string="Applicable Records")
+    previous_code = fields.Text(string="Code")
     # Next State Domain
+    next_state_id = fields.Many2one("state.transition.template", string="Next State")
     next_state_user_domain = fields.Char(string="Applicable Users")
     next_state_employee_domain = fields.Char(string="Applicable Employees")
     next_group_domain = fields.Char(string="Applicable Groups")
     next_model_domain = fields.Char(string="Applicable Records")
+    next_code = fields.Text(string="Code")
 
     applicable_ok = fields.Boolean(string="Applicable State", default=False)
 
@@ -64,6 +67,32 @@ class StateTransition(models.Model):
                     domain[index] = [domain[index][0], domain[index][1], self.env.user.id]
             index += 1
         return domain
+
+    def action_create_variant(self):
+        self.ensure_one()
+        res = self._convert_to_write({name: self[name] for name in set(self._fields) - set(self._exclude_sync_fields)})
+        res['tmpl_state_id'] = self.id
+        state_transition_variant = self.env['state.transition'].create(res)
+        return {
+            "name": "Transition State Variant",
+            "type": "ir.actions.act_window",
+            "res_model": "state.transition",
+            "view_mode": "form",
+            "view_id": self.env.ref("state_transition.state_transition_form_view").id,
+            "res_id": state_transition_variant.id,
+        }
+
+    def open_variant_ids(self):
+        self.ensure_one()
+        return {
+            "name": "Transition State Variant",
+            "type": "ir.actions.act_window",
+            "res_model": "state.transition",
+            "view_mode": "tree,form",
+            "views": [(self.env.ref("state_transition.state_transition_template_tree_simplify_view").id, "tree"),
+                      (self.env.ref("state_transition.state_transition_form_view").id, "form")],
+            "domain": [("tmpl_state_id", "=", self.id)]
+        }
 
     def _check_applicable_actions(self, user_domain, employee_domain, group_domain, record_domain, record=False):
         self.ensure_one()

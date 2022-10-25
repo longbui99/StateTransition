@@ -84,7 +84,6 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name"/>
-                <filter name="master" string="Master State" domain="[('tmpl_state_id','=',False)]"/>
             </search>
         </field>
     </record>
