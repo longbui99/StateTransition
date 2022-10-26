@@ -53,7 +53,8 @@ class StateTransition(models.Model):
     @api.constrains("mode")
     def _check_mode(self):
         for state in self.filtered(lambda stt: stt.mode == "static_code" and stt.model_id):
-            if not hasattr(state.env[state.model_id.model], state.method):
+            if (state.previous_code and not hasattr(state.env[state.model_id.model], state.previous_code))\
+             or (state.next_code and not hasattr(state.env[state.model_id.model], state.next_code)):
                 raise ValidationError(_("""The method %s doesn't not exist in model %s (%s)!"""% (
                     state.key, state.model_id.name, state.model_id.model)))
 
@@ -129,9 +130,13 @@ class StateTransition(models.Model):
             record = self.env[request["active_model"]].browse(request["active_id"]).exists()
         state = self.env["state.transition"].search([("tmpl_state_id", "=", self.id), ("model_id.model", "=", request["active_model"])], limit=1)
         state = state.with_context(fit_model=bool(state))
-        response = dict()
+        processing_record = (state or self)
+        response = {
+            'processing_id': processing_record.id,
+            'processing_model': processing_record._name
+        }
         previous_state, next_state = self.previous_state_id, self.next_state_id
-        if (state or self)._check_applicable_actions(
+        if processing_record._check_applicable_actions(
                 json.loads(state.previous_state_user_domain or self.previous_state_user_domain or "False"),
                 json.loads(state.previous_state_employee_domain or self.previous_state_employee_domain or "False"),
                 json.loads(state.previous_group_domain or self.previous_group_domain or "False"),
@@ -142,7 +147,7 @@ class StateTransition(models.Model):
                 "title": previous_state.display_name,
                 "res_id": previous_state.id
             }
-        if (state or self)._check_applicable_actions(
+        if processing_record._check_applicable_actions(
                 json.loads(state.next_state_user_domain or self.next_state_user_domain or "False"),
                 json.loads(state.next_state_employee_domain or self.next_state_employee_domain or "False"),
                 json.loads(state.next_group_domain or self.next_group_domain or "False"),
@@ -162,7 +167,7 @@ class StateTransition(models.Model):
         if self.mode == "static_code" and self[executing_field]:
             if not hasattr(record, self[executing_field]):
                 raise ValidationError(_("Cannot find method %s in model %s") % (self[executing_field], record._name))
-            getattr(record, self[executing_field])()
+            getattr(record.with_context(mode=mode), self[executing_field])()
 
     def execute_action(self, request):
         self.ensure_one()
