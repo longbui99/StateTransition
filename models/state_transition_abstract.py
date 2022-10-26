@@ -19,3 +19,4 @@ class StateTransitionAbstract(models.AbstractModel):
                                         string="State",
                                         domain=_default_domain,
                                         default=_default_stt_transition_id)
+    status = fields.Char(string="Status", related="stt_transition_id.key", store=True)
