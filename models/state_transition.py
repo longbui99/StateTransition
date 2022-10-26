@@ -8,13 +8,7 @@ class StateTransition(models.Model):
     _description = "State Transition"
     _rec_name = 'name'
 
-    tmpl_state_id = fields.Many2one("state.transition.template", string="Template", ondelete="cascade")
-
-    def prepare_sync_data(self):
-        self.ensure_one()
-        updating_fields = set(self._fields) - set(self._exclude_sync_fields)
-        res = self._convert_to_write({name: self[name] for name in updating_fields})
-        return res
+    tmpl_state_id = fields.Many2one("state.transition.template", string="Template", ondelete="cascade", required=True)
 
     def sync_tmpl_to_variant(self, values):
         self.ensure_one()
@@ -22,5 +16,12 @@ class StateTransition(models.Model):
 
     @api.onchange("tmpl_state_id")
     def _onchange_tmpl_state_id(self):
-        updating_values = self.tmpl_state_id and self.tmpl_state_id.prepare_sync_data() or {}
+        updating_values = self.prepare_sync_data()
         self.sync_tmpl_to_variant(updating_values)
+
+    @api.model
+    def create(self, values):
+        if 'tmpl_state_id' in values:
+            values.update(self.env['state.transition.template'].browse(values['tmpl_state_id']).prepare_sync_data())
+        res = super().create(values)
+        return res

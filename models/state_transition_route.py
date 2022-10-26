@@ -16,8 +16,8 @@ class StateTransition(models.Model):
         if 'create_from_ui' in values:
             return UserError(_("Cannot update record creating approach!"))
         return super().write(values)
-
-    @api.ondelete(at_uninstall=False)
-    def _unlink_route(self):
-        if any(not route.create_from_ui for route in self):
-            raise UserError(_("Cannot delete routes that aren't created manually"))
+    
+    # @api.ondelete(at_uninstall=False)
+    # def _unlink_route(self):
+    #     if any(not route.create_from_ui for route in self):
+    #         raise UserError(_("Cannot delete routes that aren't created manually"))

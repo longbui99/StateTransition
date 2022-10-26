@@ -41,15 +41,14 @@ class StateTransition(models.Model):
 
     applicable_ok = fields.Boolean(string="Applicable State", default=False)
 
-    _exclude_sync_fields = ["id", "write_date", "create_date", "write_uid", "create_uid",
+    _exclude_sync_fields = ["id", "stt_transition_id", "stt_transition_ids", "write_date", "create_date", "write_uid", "create_uid",
                             "__last_update"]
 
-    @api.returns('self',
-        upgrade=lambda self, value, args, offset=0, limit=None, order=None, count=False: value if count else self.browse(value),
-        downgrade=lambda self, value, args, offset=0, limit=None, order=None, count=False: value if count else value.ids)
-    def search(self, args, offset=0, limit=None, order=None, count=False):
-        print(args)
-        return super().search(args, offset, limit, order, count)
+    def prepare_sync_data(self):
+        self.ensure_one()
+        updating_fields = set(self._fields) - set(self._exclude_sync_fields)
+        res = self._convert_to_write({name: self[name] for name in updating_fields})
+        return res
 
     @api.constrains("mode")
     def _check_mode(self):
@@ -133,10 +132,10 @@ class StateTransition(models.Model):
         response = dict()
         previous_state, next_state = self.previous_state_id, self.next_state_id
         if (state or self)._check_applicable_actions(
-                json.loads(state.previous_state_user_domain or self.previous_state_user_domain or "[]"),
-                json.loads(state.previous_state_employee_domain or self.previous_state_employee_domain or "[]"),
-                json.loads(state.previous_group_domain or self.previous_group_domain or "[]"),
-                json.loads(state.previous_model_domain or self.previous_model_domain or "[]"),
+                json.loads(state.previous_state_user_domain or self.previous_state_user_domain or "False"),
+                json.loads(state.previous_state_employee_domain or self.previous_state_employee_domain or "False"),
+                json.loads(state.previous_group_domain or self.previous_group_domain or "False"),
+                json.loads(state.previous_model_domain or self.previous_model_domain or "False"),
                 record
         ) and previous_state:
             response["previous"] = {
@@ -144,10 +143,10 @@ class StateTransition(models.Model):
                 "res_id": previous_state.id
             }
         if (state or self)._check_applicable_actions(
-                json.loads(state.next_state_user_domain or self.next_state_user_domain or "[]"),
-                json.loads(state.next_state_employee_domain or self.next_state_employee_domain or "[]"),
-                json.loads(state.next_group_domain or self.next_group_domain or "[]"),
-                json.loads(state.next_model_domain or self.next_model_domain or "[]"),
+                json.loads(state.next_state_user_domain or self.next_state_user_domain or "False"),
+                json.loads(state.next_state_employee_domain or self.next_state_employee_domain or "False"),
+                json.loads(state.next_group_domain or self.next_group_domain or "False"),
+                json.loads(state.next_model_domain or self.next_model_domain or "False"),
                 record
         ) and next_state:
             response["next"] = {
