@@ -12,8 +12,10 @@ class StateTransitionAbstract(models.AbstractModel):
             ('start_ok', '=', True)
         ], limit=1).id
 
-    stt_transition_id = fields.Many2one("state.transition.template", 
-        string="State", 
-        domain=[('stt_transition_id.subscribe_model_ids.model', '=', _name)],
-        default=_default_stt_transition_id)
+    def _default_domain(self):
+        return [('stt_transition_id.subscribe_model_ids.model', '=', self._name)]
 
+    stt_transition_id = fields.Many2one("state.transition.template",
+                                        string="State",
+                                        domain=_default_domain,
+                                        default=_default_stt_transition_id)
