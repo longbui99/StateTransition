@@ -18,6 +18,7 @@
                     <group>
                         <field name="model_id" attrs="{'invisible': [('tmpl_state_id','=', False)]}"
                                options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                        <field name="mode"/>
                     </group>
                     <notebook>
                         <page name="previous_state" string="Previous State">
@@ -86,5 +87,15 @@
                 <field name="name"/>
             </search>
         </field>
+    </record>
+
+    <record id='action_open_transition_variant' model='ir.actions.act_window'>
+        <field name="name">Transition Variants</field>
+        <field name="res_model">state.transition</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('state_transition.state_transition_tree_view')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('state_transition.state_transition_form_view')}),
+        ]"/>
     </record>
 </odoo>

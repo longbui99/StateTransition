@@ -18,7 +18,7 @@ class StateTransition(models.Model):
     mode = fields.Selection([
         ("static_code", "Python Code"),
         ("server_action", "Server Action")
-    ], string="Mode", required=True)
+    ], string="Mode")
     stt_transition_id = fields.Many2one("state.transition.route", string="State Transition Route", ondelete="cascade")
     stt_transition_ids = fields.One2many("state.transition", "tmpl_state_id", string="State Variants")
     model_id = fields.Many2one("ir.model", string="Model", ondelete="cascade")
@@ -37,11 +37,19 @@ class StateTransition(models.Model):
     next_group_domain = fields.Char(string="Applicable Groups")
     next_model_domain = fields.Char(string="Applicable Records")
     next_code = fields.Text(string="Code")
+    start_ok = fields.Boolean(string="Start State")
 
     applicable_ok = fields.Boolean(string="Applicable State", default=False)
 
     _exclude_sync_fields = ["id", "write_date", "create_date", "write_uid", "create_uid",
                             "__last_update"]
+
+    @api.returns('self',
+        upgrade=lambda self, value, args, offset=0, limit=None, order=None, count=False: value if count else self.browse(value),
+        downgrade=lambda self, value, args, offset=0, limit=None, order=None, count=False: value if count else value.ids)
+    def search(self, args, offset=0, limit=None, order=None, count=False):
+        print(args)
+        return super().search(args, offset, limit, order, count)
 
     @api.constrains("mode")
     def _check_mode(self):

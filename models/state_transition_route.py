@@ -1,4 +1,5 @@
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 
 class StateTransition(models.Model):
@@ -9,3 +10,9 @@ class StateTransition(models.Model):
     name = fields.Char(string="Name")
     stt_template_ids = fields.One2many("state.transition.template", "stt_transition_id", string="State Template")
     subscribe_model_ids = fields.Many2many("ir.model", string="Subscribe Model", ondelete="cascade")
+    create_from_ui = fields.Boolean(string="User Create?", default=True)
+    
+    @api.ondelete(at_uninstall=False)
+    def _unlink_route(self):
+        if any(not route.create_from_ui for route in self):
+            raise UserError(_("Cannot delete routes that aren't created manually"))
