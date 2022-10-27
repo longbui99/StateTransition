@@ -43,7 +43,7 @@ class StateTransition(models.Model):
 
     applicable_ok = fields.Boolean(string="Applicable State", default=False)
 
-    _exclude_sync_fields = ["id", "stt_transition_id", "stt_transition_ids", "write_date", "create_date", "write_uid", "create_uid",
+    _exclude_sync_fields = ["id", "stt_transition_id", "stt_transition_ids", "write_date", "create_date", "write_uid", "create_uid", "next_code", "model_id", "mode",
                             "__last_update"]
 
     _protect_fields = ["key", "start_ok"]
