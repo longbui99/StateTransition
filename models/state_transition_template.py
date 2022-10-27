@@ -1,6 +1,6 @@
 import json
 
-from odoo import models, fields, api, _
+from odoo import SUPERUSER_ID, models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 from odoo.osv.expression import AND
 
@@ -57,7 +57,7 @@ class StateTransition(models.Model):
     def write(self, values):
         if self._context.get('stt_transition_kanban'):
             raise UserError(_("Cannot create/edit stage from Kanban View"))
-        if any(project_field in values for project_field in self._protect_fields):
+        if any(project_field in values for project_field in self._protect_fields) and self.env.user.id != SUPERUSER_ID:
             if not all(self.mapped('stt_transition_id.create_from_ui')):
                 raise UserError(_("Cannot manually edit protect field on the static record!"))
         return super().write(values)
