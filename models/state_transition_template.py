@@ -10,6 +10,7 @@ class StateTransition(models.Model):
     _description = "State Transition Template"
     _rec_name = "name"
     _order = "sequence asc, id desc"
+    _fold_name = 'is_fold'
 
     name = fields.Char(string="Name", required=True)
     sequence = fields.Integer(string="Sequence", default=0)
@@ -38,12 +39,12 @@ class StateTransition(models.Model):
     next_model_domain = fields.Char(string="Applicable Records")
     next_code = fields.Text(string="Code")
     start_ok = fields.Boolean(string="Start State")
+    is_fold = fields.Boolean(string="Is Fold", compute='_compute_is_fold')
 
     applicable_ok = fields.Boolean(string="Applicable State", default=False)
 
     _exclude_sync_fields = ["id", "stt_transition_id", "stt_transition_ids", "write_date", "create_date", "write_uid", "create_uid",
                             "__last_update"]
-
 
     _protect_fields = ["key", "start_ok"]
 
@@ -84,6 +85,26 @@ class StateTransition(models.Model):
                     domain[index] = [domain[index][0], domain[index][1], self.env.user.id]
             index += 1
         return domain
+
+    def _compute_is_fold(self):
+        record_by_id = {record.id: record for record in self}
+        for record in self:
+            res = record.get_accessible_actions({})
+            ids = []
+            if res.get('previous') and res['previous']['res_id'] in record_by_id:
+                ids.append(res['previous']['res_id'])
+            if res.get('next') and res['next']['res_id'] in record_by_id:
+                ids.append(res['next']['res_id'])
+            if ids:
+                for res_id in ids:
+                    if res_id in record_by_id:
+                        record_by_id[res_id].is_fold = False
+                        record_by_id.pop(res_id)
+                record.is_fold = False
+                if record.id in record_by_id:
+                    record_by_id.pop(record.id)
+        for res_id, record in record_by_id.items():
+            record.is_fold = True
 
     def action_create_variant(self):
         self.ensure_one()
@@ -135,10 +156,11 @@ class StateTransition(models.Model):
     def get_accessible_actions(self, request):
         self.ensure_one()
         record = False
+        state = self.env["state.transition"]
         if "active_model" in request and "active_id" in request:
             record = self.env[request["active_model"]].browse(request["active_id"]).exists()
-        state = self.env["state.transition"].search([("tmpl_state_id", "=", self.id), ("model_id.model", "=", request["active_model"])], limit=1)
-        state = state.with_context(fit_model=bool(state))
+            state = state.search([("tmpl_state_id", "=", self.id), ("model_id.model", "=", request["active_model"])], limit=1)
+            state = state.with_context(fit_model=bool(state))
         processing_record = (state or self)
         response = {
             'processing_id': processing_record.id,

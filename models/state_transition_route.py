@@ -21,3 +21,4 @@ class StateTransition(models.Model):
     def _unlink_route(self):
         if any(not route.create_from_ui for route in self):
             raise UserError(_("Cannot delete routes that aren't created manually"))
+

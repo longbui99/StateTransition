@@ -18,5 +18,14 @@ class StateTransitionAbstract(models.AbstractModel):
     stt_transition_id = fields.Many2one("state.transition.template",
                                         string="State",
                                         domain=_default_domain,
-                                        default=_default_stt_transition_id)
+                                        default=_default_stt_transition_id,
+                                        group_expand='_read_group_stage_ids')
     status = fields.Char(string="Status", related="stt_transition_id.key", store=True)
+
+    @api.model
+    def _read_group_stage_ids(self, stages, domain, order):
+        field_domain = self._fields['stt_transition_id'].domain
+        if callable(field_domain):
+            field_domain = field_domain(self)
+        stage_ids = stages.sudo()._search(field_domain, order=order)
+        return stages.browse(stage_ids)
