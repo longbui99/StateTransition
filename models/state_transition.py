@@ -10,6 +10,8 @@ class StateTransition(models.Model):
 
     tmpl_state_id = fields.Many2one("state.transition.template", string="Template", ondelete="cascade", required=True)
 
+    _protect_fields = ["tmpl_state_id", "previous_code", "next_code", "model_id", "previous_code", "mode"]
+
     def sync_tmpl_to_variant(self, values):
         self.ensure_one()
         self.update(values)
@@ -25,3 +27,9 @@ class StateTransition(models.Model):
             values.update(self.env['state.transition.template'].browse(values['tmpl_state_id']).prepare_sync_data())
         res = super().create(values)
         return res
+
+    def write(self, values):
+        if any(project_field in values for project_field in self._protect_fields):
+            if not all(self.mapped('tmpl_state_id.stt_transition_id.create_from_ui')):
+                raise ValidationError(_("Cannot manually edit protect field on the static record!"))
+        return super().write(values)
