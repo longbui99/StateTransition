@@ -1,7 +1,7 @@
 import json
 
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from odoo.osv.expression import AND
 
 
@@ -48,11 +48,24 @@ class StateTransition(models.Model):
 
     _protect_fields = ["key", "start_ok"]
 
+    @api.model
+    def create(self, values):
+        if self._context.get('stt_transition_kanban'):
+            raise UserError(_("Cannot create/edit stage from Kanban View"))
+        return super().create(values)
+
     def write(self, values):
+        if self._context.get('stt_transition_kanban'):
+            raise UserError(_("Cannot create/edit stage from Kanban View"))
         if any(project_field in values for project_field in self._protect_fields):
             if not all(self.mapped('stt_transition_id.create_from_ui')):
-                raise ValidationError(_("Cannot manually edit protect field on the static record!"))
+                raise UserError(_("Cannot manually edit protect field on the static record!"))
         return super().write(values)
+
+    def unlink(self):
+        if self._context.get('stt_transition_kanban'):
+            raise UserError(_("Cannot create/edit stage from Kanban View"))
+        return super().unlink()
 
     def prepare_sync_data(self):
         self.ensure_one()

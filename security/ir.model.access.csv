@@ -1,4 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_transition_state,state.transition,model_state_transition,base.group_user,1,1,1,1
-access_transition_state_template,state.transition.template,model_state_transition_template,base.group_user,1,1,1,1
-access_transition_state_route,state.transition.route,model_state_transition_route,base.group_user,1,1,1,1
+access_transition_state,state.transition,model_state_transition,base.group_user,1,0,0,0
+access_transition_state_template,state.transition.template,model_state_transition_template,base.group_user,1,0,0,0
+access_transition_state_route,state.transition.route,model_state_transition_route,base.group_user,1,0,0,0
+
+access_transition_state_system,state.transition_system,model_state_transition,base.group_system,1,1,1,1
+access_transition_state_template_system,state.transition.template_system,model_state_transition_template,base.group_system,1,1,1,1
+access_transition_state_route_system,state.transition.route_system,model_state_transition_route,base.group_system,1,1,1,1

@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError
 
 
 class StateTransition(models.Model):
@@ -23,13 +23,22 @@ class StateTransition(models.Model):
 
     @api.model
     def create(self, values):
+        if self._context.get('stt_transition_kanban'):
+            raise UserError(_("Cannot create/edit stage from Kanban View"))
         if 'tmpl_state_id' in values:
             values.update(self.env['state.transition.template'].browse(values['tmpl_state_id']).prepare_sync_data())
         res = super().create(values)
         return res
 
     def write(self, values):
+        if self._context.get('stt_transition_kanban'):
+            raise UserError(_("Cannot create/edit stage from Kanban View"))
         if any(project_field in values for project_field in self._protect_fields):
             if not all(self.mapped('tmpl_state_id.stt_transition_id.create_from_ui')):
-                raise ValidationError(_("Cannot manually edit protect field on the static record!"))
+                raise UserError(_("Cannot manually edit protect field on the static record!"))
         return super().write(values)
+
+    def unlink(self):
+        if self._context.get('stt_transition_kanban'):
+            raise UserError(_("Cannot create/edit stage from Kanban View"))
+        return super().unlink()
