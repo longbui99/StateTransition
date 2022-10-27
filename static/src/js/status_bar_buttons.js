@@ -62,10 +62,13 @@ odoo.define('state_transition.status_bar_buttons', function (require) {
             if (this.transition?.previous) {
                 let self = this;
                 this._rpc({
-                    model: 'state.transition.template',
+                    model: self.transition.processing_model,
                     method: 'execute_action',
-                    args: [this.recordData.data[this.attrs.transition].res_id,
-                        self._prepareStateMovingData({'res_id': self.transition.previous.res_id})
+                    args: [self.transition.processing_id,
+                        self._prepareStateMovingData({
+                            'res_id': self.transition.previous.res_id,
+                            'mode': 'previous'
+                        })
                     ]
                 }).then(result => {
                     self.reload()
@@ -76,10 +79,13 @@ odoo.define('state_transition.status_bar_buttons', function (require) {
             if (this.transition?.next) {
                 let self = this;
                 this._rpc({
-                    model: 'state.transition.template',
+                    model: self.transition.processing_model,
                     method: 'execute_action',
-                    args: [this.recordData.data[this.attrs.transition].res_id,
-                        self._prepareStateMovingData({'res_id': self.transition.next.res_id})]
+                    args: [self.transition.processing_id,
+                        self._prepareStateMovingData({
+                            'res_id': self.transition.next.res_id,
+                            'mode': 'next'
+                        })]
                 }).then(result => {
                     self.reload()
                 })
