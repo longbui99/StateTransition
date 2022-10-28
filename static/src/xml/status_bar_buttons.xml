@@ -2,9 +2,9 @@
 
 <template>
     <t t-name="state_transition.TransitionButtonBox">
-        <div>
-            <button t-if="widget.transition?.previous" class="btn btn-secondary back-to-previous-state">Back to <t t-esc="widget.transition?.previous?.title"/></button>
+        <div class="auto_statusbar_buttons">
             <button t-if="widget.transition?.next" class="btn btn-primary next-state"><t t-esc="widget.transition?.next?.title"/></button>
+            <button t-if="widget.transition?.previous" class="btn btn-secondary back-to-previous-state">Back to <t t-esc="widget.transition?.previous?.title"/></button>
         </div>
     </t>
 </template>
