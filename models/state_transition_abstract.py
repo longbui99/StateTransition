@@ -19,8 +19,9 @@ class StateTransitionAbstract(models.AbstractModel):
                                         string="State",
                                         domain=_default_domain,
                                         default=_default_stt_transition_id,
-                                        group_expand='_read_group_stage_ids')
-    status = fields.Char(string="Status", related="stt_transition_id.key", store=True)
+                                        group_expand='_read_group_stage_ids',
+                                        copy=False)
+    state = fields.Char(string="State", related="stt_transition_id.key", store=True, copy=False)
 
     @api.model
     def _read_group_stage_ids(self, stages, domain, order):
@@ -29,3 +30,11 @@ class StateTransitionAbstract(models.AbstractModel):
             field_domain = field_domain(self)
         stage_ids = stages.sudo()._search(field_domain, order=order)
         return stages.browse(stage_ids)
+
+    def _update_state(self, state):
+        self.ensure_one()
+        transition_id = False
+        for record in self.stt_transition_id.stt_transition_id.stt_template_ids:
+            if record.key == state:
+                transition_id = record
+        self.stt_transition_id = transition_id
