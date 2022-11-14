@@ -20,7 +20,8 @@ class StateTransitionAbstract(models.AbstractModel):
                                         domain=_default_domain,
                                         default=_default_stt_transition_id,
                                         group_expand='_read_group_stage_ids',
-                                        copy=False)
+                                        copy=False,
+                                        tracking=True)
     state = fields.Char(string="State", related="stt_transition_id.key", store=True, copy=False)
 
     @api.model
