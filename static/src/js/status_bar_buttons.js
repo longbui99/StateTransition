@@ -6,6 +6,7 @@ odoo.define('state_transition.status_bar_buttons', function (require) {
     var _t = core._t;
     var widgetRegistry = require('web.widget_registry');
     var Widget = require('web.Widget');
+    const Dialog = require('web.Dialog');
 
     var StatusBarButtons = Widget.extend({
         template: 'state_transition.TransitionButtonBox',
@@ -58,40 +59,34 @@ odoo.define('state_transition.status_bar_buttons', function (require) {
             }, defaultData);
             return res
         },
+        _triggerAction: async function(mode, requestContent, force=false){
+            let self = this;
+            let requestBody = this._prepareStateMovingData({
+                'res_id': requestContent.res_id,
+                'mode': mode
+            })
+            if (requestContent?.confirm && !force){
+                return Dialog.confirm(this, `${self.attrs.confirmation || 'Update to'} ${requestContent.title}`, 
+                { confirm_callback: () => self._triggerAction(mode, requestContent, true) })
+            } 
+            this._rpc({
+                model: self.transition.processing_model,
+                method: 'execute_action',
+                args: [self.transition.processing_id, requestBody]
+            }).then(result => {
+                self.reload()
+            })
+        },
         _onBackToPreviousState: function () {
             if (this.transition?.previous) {
-                let self = this;
-                this._rpc({
-                    model: self.transition.processing_model,
-                    method: 'execute_action',
-                    args: [self.transition.processing_id,
-                        self._prepareStateMovingData({
-                            'res_id': self.transition.previous.res_id,
-                            'mode': 'previous'
-                        })
-                    ]
-                }).then(result => {
-                    self.reload()
-                })
+                this._triggerAction("previous", this.transition.previous)
             }
         },
-        _onNextState: function () {
+        _onNextState: async function () {
             if (this.transition?.next) {
-                let self = this;
-                this._rpc({
-                    model: self.transition.processing_model,
-                    method: 'execute_action',
-                    args: [self.transition.processing_id,
-                        self._prepareStateMovingData({
-                            'res_id': self.transition.next.res_id,
-                            'mode': 'next'
-                        })]
-                }).then(result => {
-                    self.reload()
-                })
+                this._triggerAction("next", this.transition.next)
             }
         }
-
     });
 
     widgetRegistry.add('status_bar_buttons', StatusBarButtons);

@@ -24,6 +24,7 @@
                         <page name="previous_state" string="Previous State">
                             <group >
                                 <group >
+                                    <field name="previous_ask_for_confirmation"/>
                                     <field name="previous_state_user_domain" widget="advance_domain"
                                            options="{'model': 'res.users', 'in_dialog': true}"/>
                                     <field name="previous_state_employee_domain" widget="advance_domain"
@@ -43,6 +44,7 @@
                         <page name="next_state" string="Next State">
                             <group>
                                 <group>
+                                    <field name="next_ask_for_confirmation"/>
                                     <field name="next_state_user_domain" widget="advance_domain"
                                            options="{'model': 'res.users', 'in_dialog': true}"/>
                                     <field name="next_state_employee_domain" widget="advance_domain"

@@ -31,6 +31,7 @@ class StateTransition(models.Model):
     previous_group_domain = fields.Char(string="Applicable Groups")
     previous_model_domain = fields.Char(string="Applicable Records")
     previous_code = fields.Text(string="Code")
+    previous_ask_for_confirmation = fields.Boolean(string="Ask for Confirmation")
     # Next State Domain
     next_state_id = fields.Many2one("state.transition.template", string="Next State")
     next_state_user_domain = fields.Char(string="Applicable Users")
@@ -38,13 +39,15 @@ class StateTransition(models.Model):
     next_group_domain = fields.Char(string="Applicable Groups")
     next_model_domain = fields.Char(string="Applicable Records")
     next_code = fields.Text(string="Code")
+    next_ask_for_confirmation = fields.Boolean(string="Ask for Confirmation")
     start_ok = fields.Boolean(string="Start State")
-    is_fold = fields.Boolean(string="Is Fold", compute='_compute_is_fold')
+    is_fold = fields.Boolean(string="Is Fold", compute='_compute_is_fold') 
 
     applicable_ok = fields.Boolean(string="Applicable State", default=False)
 
     _exclude_sync_fields = ["id", "stt_transition_id", "stt_transition_ids", "write_date", "create_date", "write_uid", "create_uid", "next_code", "model_id", "mode",
                             "__last_update"]
+    _force_sync_fields = ["reference", "start_ok", "key", "previous_ask_for_confirmation", "next_ask_for_confirmation"]
 
     _protect_fields = ["key", "start_ok"]
 
@@ -60,7 +63,13 @@ class StateTransition(models.Model):
         if any(project_field in values for project_field in self._protect_fields) and self.env.user.id != SUPERUSER_ID:
             if not all(self.mapped('stt_transition_id.create_from_ui')):
                 raise UserError(_("Cannot manually edit protect field on the static record!"))
-        return super().write(values)
+        res = super().write(values)
+        if self._name == "state.transition.template":
+            for record in self:
+                self.env["state.transition"].search([('tmpl_state_id', '=', record.id)]).write({
+                    key: record[key] for key in self._force_sync_fields if key in values
+                })
+        return res
 
     def unlink(self):
         if self._context.get('stt_transition_kanban'):
@@ -189,7 +198,8 @@ class StateTransition(models.Model):
         ) and previous_state:
             response["previous"] = {
                 "title": previous_state.display_name,
-                "res_id": previous_state.id
+                "res_id": previous_state.id,
+                "confirm": processing_record.previous_ask_for_confirmation
             }
         if processing_record._check_applicable_actions(
                 json.loads(state.next_state_user_domain or self.next_state_user_domain or "False"),
@@ -200,7 +210,8 @@ class StateTransition(models.Model):
         ) and next_state:
             response["next"] = {
                 "title": next_state.display_name,
-                "res_id": next_state.id
+                "res_id": next_state.id,
+                "confirm": processing_record.next_ask_for_confirmation
             }
         return response
 
